@@ -1,7 +1,5 @@
 # mongodb-backup
 
-[![Deploy to Tutum](https://s.tutum.co/deploy-to-tutum.svg)](https://dashboard.tutum.co/stack/deploy/)
-
 This image runs mongodump to backup data using cronjob to folder `/backup`
 
 ## Usage:
