@@ -1,16 +1,24 @@
-FROM ubuntu:trusty
-MAINTAINER Tutum Labs <support@tutum.co>
+FROM alpine:latest
+MAINTAINER Pedro Pilla <pedropilla@gmail.com>
 
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10 && \
-    echo "deb http://repo.mongodb.org/apt/ubuntu "$(lsb_release -sc)"/mongodb-org/3.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.0.list && \
-    apt-get update && \
-    apt-get install -y mongodb-org-shell mongodb-org-tools && \
-    echo "mongodb-org-shell hold" | dpkg --set-selections && \
-    echo "mongodb-org-tools hold" | dpkg --set-selections && \
-    mkdir /backup
+# Optional Configuration Parameter
+ARG SERVICE_USER
+ARG SERVICE_HOME
+
+# Default Settings
+ENV SERVICE_USER ${SERVICE_USER:-mongo}
+ENV SERVICE_HOME ${SERVICE_HOME:-/home/${SERVICE_USER}}
+
+RUN \
+  adduser -h ${SERVICE_HOME} -s /sbin/nologin -u 1000 -D ${SERVICE_USER} && \
+  echo 'http://dl-cdn.alpinelinux.org/alpine/latest-stable/main' >> /etc/apk/repositories && \
+  echo 'http://dl-cdn.alpinelinux.org/alpine/latest-stable/community' >> /etc/apk/repositories && \
+  apk update && \
+  apk add --no-cache dumb-init mongodb-tools && \
+  mkdir /backup
 
 ENV CRON_TIME="0 0 * * *"
-
 ADD run.sh /run.sh
 VOLUME ["/backup"]
+
 CMD ["/run.sh"]
