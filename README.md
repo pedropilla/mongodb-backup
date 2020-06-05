@@ -2,27 +2,22 @@
 
 This image runs mongodump to backup data using cronjob to folder `/backup`
 
-## Usage:
+## Example:
 
-    docker run -d \
-        --env MONGODB_HOST=mongodb.host \
-        --env MONGODB_PORT=27017 \
-        --env MONGODB_USER=admin \
-        --env MONGODB_PASS=password \
-        --volume host.folder:/backup
-        pedropilla/mongodb-backup
+```
+docker network create mongodbbackup
 
-Moreover, if you link `pedropilla/mongodb-backup` to a mongodb container(e.g. `pedropilla/mongodb`) with an alias named mongodb, this image will try to auto load the `host`, `port`, `user`, `pass` if possible.
+docker run -d --name mongodb --network mongodbbackup -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=qwerty12345 pedropilla/mongodb-dummydb
 
-    docker run -d -p 27017:27017 -p 28017:28017 -e MONGODB_PASS="mypass" --name mongodb pedropilla/mongodb
-    docker run -d --link mongodb:mongodb -v host.folder:/backup pedropilla/mongodb-backup
+docker run -d --name mongodbbackup --network mongodbbackup -e MONGODB_HOST=mongodb -e MONGODB_USER=root -e MONGODB_PASS=qwerty12345 -e CRON_TIME='*/1 * * * *' -e MAX_BACKUPS=30 -e EXTRA_OPTS=--forceTableScan -v $(pwd):/backup pedropilla/mongodb-backup
+```
 
 ## Parameters
 
-    MONGODB_HOST    the host/ip of your mongodb database
-    MONGODB_PORT    the port number of your mongodb database
-    MONGODB_USER    the username of your mongodb database. If MONGODB_USER is empty while MONGODB_PASS is not, the image will use admin as the default username
-    MONGODB_PASS    the password of your mongodb database
+    MONGODB_HOST    the host/ip of your mongodb database. Default: mongodb
+    MONGODB_PORT    the port number of your mongodb database. Default: 27017
+    MONGODB_USER    the username of your mongodb database. Default: root
+    MONGODB_PASS    the password of your mongodb database. Default: qwerty12345
     MONGODB_DB      the database name to dump. If not specified, it will dump all the databases
     EXTRA_OPTS      the extra options to pass to mongodump command
     CRON_TIME       the interval of cron job to run mongodump. `0 0 * * *` by default, which is every day at 00:00
@@ -33,8 +28,8 @@ Moreover, if you link `pedropilla/mongodb-backup` to a mongodb container(e.g. `p
 
 See the list of backups, you can run:
 
-    docker exec pedropilla-backup ls /backup
+    docker exec mongodbbackup ls /backup
 
 To restore database from a certain backup, simply run:
 
-    docker exec pedropilla-backup /restore.sh /backup/2015.08.06.171901
+    docker exec mongodbbackup /restore.sh /backup/2020.06.05.111000
